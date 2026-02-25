@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import joblib
 import numpy as np
+import pandas as pd
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -60,11 +61,11 @@ class FailGuardPredictor:
             value = features_dict.get(feature_name, 0)
             features.append(float(value))
         
-        # Convert to numpy array and reshape
-        features_array = np.array(features).reshape(1, -1)
+        # Convert to DataFrame with proper feature names to avoid sklearn warning
+        features_df = pd.DataFrame([features], columns=FEATURE_NAMES)
         
         # Normalize
-        features_scaled = self.scaler.transform(features_array)
+        features_scaled = self.scaler.transform(features_df)
         
         # Predict
         prediction = self.model.predict(features_scaled)[0]
