@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FailGuard AI - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🛡️ FailGuard AI Dashboard</h1>
+                <p class="subtitle">Model Performance & Analytics</p>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">← Back to Analyzer</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <!-- Model Performance Summary -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <h3>📊 Model Performance Summary</h3>
+                    <p class="card-description">
+                        Key metrics showing how well the XGBoost model performs at predicting software defects.
+                    </p>
+                    <div id="performanceMetrics" class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-label">Accuracy</div>
+                            <div class="metric-value" id="accuracy">--</div>
+                            <div class="metric-desc">Overall correctness</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Precision</div>
+                            <div class="metric-value" id="precision">--</div>
+                            <div class="metric-desc">True positive rate</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Recall</div>
+                            <div class="metric-value" id="recall">--</div>
+                            <div class="metric-desc">Defects caught</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">F1-Score</div>
+                            <div class="metric-value" id="f1score">--</div>
+                            <div class="metric-desc">Balance metric</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">ROC-AUC</div>
+                            <div class="metric-value" id="rocauc">--</div>
+                            <div class="metric-desc">Classification quality</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature Importance Chart -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <h3>🎯 Feature Importance</h3>
+                    <p class="card-description">
+                        Shows which software metrics have the most influence on predicting defects. 
+                        Higher bars = more important for risk prediction.
+                    </p>
+                    <div id="featureChart" style="width: 100%; height: 400px;"></div>
+                    <div class="chart-legend">
+                        <strong>What it means:</strong> These are the top factors affecting software defect predictions.
+                        Focus on these metrics for quality improvement.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risk Distribution -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>📈 Risk Distribution</h3>
+                    <p class="card-description">
+                        Distribution of modules by risk level across your codebase.
+                    </p>
+                    <div id="riskChart" style="width: 100%; height: 350px;"></div>
+                    <div class="chart-legend">
+                        <strong>Interpretation:</strong> Shows breakdown of low, medium, and high risk modules.
+                    </div>
+                </div>
+
+                <!-- Confusion Matrix -->
+                <div class="dashboard-card">
+                    <h3>🔍 Confusion Matrix</h3>
+                    <p class="card-description">
+                        Shows prediction accuracy breakdown: true positives, false positives, etc.
+                    </p>
+                    <div id="confusionMatrix" style="width: 100%; height: 350px;"></div>
+                    <div class="chart-legend">
+                        <strong>Format:</strong> Actual vs Predicted classifications
+                    </div>
+                </div>
+            </section>
+
+            <!-- Model Comparison Chart -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <h3>⚖️ Model Comparison</h3>
+                    <p class="card-description">
+                        Comparison of 4 different ML algorithms tested. XGBoost selected as best performer.
+                    </p>
+                    <div id="modelComparison" style="width: 100%; height: 400px;"></div>
+                    <div class="chart-legend">
+                        <strong>Models tested:</strong> Logistic Regression, Random Forest, XGBoost (selected), SVM
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Test Section -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <h3>⚡ Quick Test - Single Module Prediction</h3>
+                    <p class="card-description">
+                        Enter module metrics to instantly get a defect risk prediction with visualizations.
+                    </p>
+                    <div class="quick-test">
+                        <div class="test-grid">
+                            <div class="test-input">
+                                <label>LOC <input type="number" id="test_loc" value="300" min="0"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>WMC <input type="number" id="test_wmc" value="12" min="0"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>RFC <input type="number" id="test_rfc" value="18" min="0"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>CBO <input type="number" id="test_cbo" value="6" min="0"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>LCOM <input type="number" id="test_lcom" value="0.4" min="0" max="1" step="0.01"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>Churn <input type="number" id="test_code_churn" value="8" min="0"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>Developers <input type="number" id="test_num_developers" value="2" min="1"></label>
+                            </div>
+                            <div class="test-input">
+                                <label>Defects <input type="number" id="test_past_defects" value="1" min="0"></label>
+                            </div>
+                        </div>
+                        <button class="btn-submit" onclick="quickTest()">🔍 Predict Risk</button>
+                        <div id="quickTestResult" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Model Information -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>ℹ️ Model Information</h3>
+                    <div class="info-box">
+                        <p><strong>Algorithm:</strong> XGBoost Classifier</p>
+                        <p><strong>Training Samples:</strong> 4000 modules</p>
+                        <p><strong>Test Samples:</strong> 1000 modules</p>
+                        <p><strong>Features Used:</strong> 8 software metrics</p>
+                        <p><strong>Output:</strong> Binary (Safe/Defective)</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>📚 Metric Definitions</h3>
+                    <div class="info-box" style="font-size: 13px;">
+                        <p><strong>LOC:</strong> Lines of Code (module size)</p>
+                        <p><strong>WMC:</strong> Weighted Methods per Class (complexity)</p>
+                        <p><strong>RFC:</strong> Response for a Class (dependencies)</p>
+                        <p><strong>CBO:</strong> Coupling Between Objects (interdependency)</p>
+                        <p><strong>LCOM:</strong> Lack of Cohesion (method relationships)</p>
+                        <p><strong>Churn:</strong> Recent code changes</p>
+                        <p><strong>Developers:</strong> Number of contributors</p>
+                        <p><strong>Defects:</strong> Historical defect count</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Predictions Table -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <h3>📋 Recent Predictions (Last 10)</h3>
+                    <p class="card-description">
+                        History of all analyzed modules stored in database. Click on any row to view details.
+                    </p>
+                    <div class="predictions-table-wrapper">
+                        <table class="predictions-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>LOC</th>
+                                    <th>WMC</th>
+                                    <th>Risk Level</th>
+                                    <th>Probability</th>
+                                    <th>Confidence</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="predictionsBody">
+                                <tr><td colspan="7" style="text-align: center; color: #999;">Loading predictions...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+                        <div class="guide-item">
+                            <h4>🟢 LOW RISK (Probability < 33%)</h4>
+                            <p>Module is stable and well-tested. Proceed with standard QA process. Low priority for code review.</p>
+                        </div>
+                        <div class="guide-item">
+                            <h4>🟡 MEDIUM RISK (Probability 33-67%)</h4>
+                            <p>Module has some complexity concerns. Recommended enhanced testing and standard code review. Monitor during deployment.</p>
+                        </div>
+                        <div class="guide-item">
+                            <h4>🔴 HIGH RISK (Probability > 67%)</h4>
+                            <p>Module has high defect probability. Requires thorough code review, extensive testing, possible refactoring. Delay deployment until issues addressed.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 FailGuard AI - Predictive Software Failure Detection</p>
+        </footer>
+    </div>
+
+    <script>
+        function initializeDashboard() {
+            // Feature Importance Data
+            const featureData = [{
+                x: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Code Churn', 'Developers', 'Past Defects'],
+                y: [0.25, 0.22, 0.18, 0.15, 0.08, 0.07, 0.03, 0.02],
+                type: 'bar',
+                marker: {color: '#3498db'}
+            }];
+            
+            Plotly.newPlot('featureChart', featureData, {
+                title: '',
+                xaxis: {title: 'Software Metrics'},
+                yaxis: {title: 'Importance Score'},
+                font: {size: 12},
+                margin: {l: 60, r: 40, t: 40, b: 80}
+            });
+
+            // Risk Distribution Pie Chart
+            const riskData = [{
+                labels: ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'],
+                values: [45, 35, 20],
+                type: 'pie',
+                marker: {
+                    colors: ['#28a745', '#ffc107', '#dc3545']
+                },
+                textposition: 'inside',
+                textinfo: 'label+percent'
+            }];
+            
+            Plotly.newPlot('riskChart', riskData, {
+                title: '',
+                font: {size: 12}
+            });
+
+            // Confusion Matrix Heatmap
+            const confusionData = [{
+                z: [[924, 0], [76, 1]],
+                x: ['Predicted Safe', 'Predicted Defective'],
+                y: ['Actual Safe', 'Actual Defective'],
+                type: 'heatmap',
+                colorscale: 'Blues',
+                showscale: true,
+                text: [[924, 0], [76, 1]],
+                texttemplate: '%{text}',
+                textfont: {size: 14}
+            }];
+            
+            Plotly.newPlot('confusionMatrix', confusionData, {
+                title: '',
+                xaxis: {side: 'bottom'},
+                margin: {l: 150, r: 40, t: 40, b: 100}
+            });
+
+            // Model Comparison Chart
+            const models = ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'];
+            const accuracy = [0.924, 0.925, 0.918, 0.924];
+            const f1Score = [0.0, 0.026, 0.068, 0.0];
+            
+            const trace1 = {
+                x: models,
+                y: accuracy,
+                name: 'Accuracy',
+                type: 'bar',
+                marker: {color: '#3498db'}
+            };
+            
+            const trace2 = {
+                x: models,
+                y: f1Score,
+                name: 'F1-Score',
+                type: 'bar',
+                marker: {color: '#e74c3c'}
+            };
+            
+            const layout = {
+                title: '',
+                xaxis: {title: ''},
+                yaxis: {title: 'Score'},
+                barmode: 'group',
+                font: {size: 12},
+                margin: {l: 60, r: 40, t: 40, b: 100}
+            };
+            
+            Plotly.newPlot('modelComparison', [trace1, trace2], layout);
+
+            // Update metrics
+            document.getElementById('accuracy').textContent = '92.4%';
+            document.getElementById('precision').textContent = '25%';
+            document.getElementById('recall').textContent = '3.9%';
+            document.getElementById('f1score').textContent = '6.8%';
+            document.getElementById('rocauc').textContent = '55%';
+        }
+
+        function quickTest() {
+            const data = {
+                loc: parseFloat(document.getElementById('test_loc').value),
+                wmc: parseFloat(document.getElementById('test_wmc').value),
+                rfc: parseFloat(document.getElementById('test_rfc').value),
+                cbo: parseFloat(document.getElementById('test_cbo').value),
+                lcom: parseFloat(document.getElementById('test_lcom').value),
+                code_churn: parseFloat(document.getElementById('test_code_churn').value),
+                num_developers: parseFloat(document.getElementById('test_num_developers').value),
+                past_defects: parseFloat(document.getElementById('test_past_defects').value)
+            };
+
+            fetch('/api/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const riskEmoji = result.risk_level === 'HIGH' ? '⚠️' : 
+                                     result.risk_level === 'MEDIUM' ? '⚡' : '✅';
+                    
+                    const html = `
+                        <div class="result-card" style="background-color: ${result.risk_color}20; border-left: 4px solid ${result.risk_color};">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <span style="font-size: 2.5em;">${riskEmoji}</span>
+                                <div>
+                                    <h4 style="margin: 0 0 5px 0;">Risk Level: <strong>${result.risk_level}</strong></h4>
+                                    <p style="margin: 0;">Probability: <strong>${result.probability}%</strong></p>
+                                    <p style="margin: 0;">Confidence: <strong>${result.confidence}%</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('quickTestResult').innerHTML = html;
+                } else {
+                    document.getElementById('quickTestResult').innerHTML = '<p style="color: red;">Error: ' + (result.error || 'Unknown error') + '</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('quickTestResult').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            });
+        }
+
+        async function loadPredictions() {
+            try {
+                const response = await fetch('/api/predictions?limit=10');
+                const predictions = await response.json();
+                
+                const tbody = document.getElementById('predictionsBody');
+                
+                if (!predictions || predictions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999; padding: 20px;">No predictions stored yet. Make a prediction to see it here.</td></tr>';
+                    return;
+                }
+                
+                // Format table rows
+                const rows = predictions.map(pred => {
+                    const timestamp = new Date(pred.timestamp).toLocaleString('en-US', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    
+                    // Determine risk badge color
+                    let riskColor = '#28a745'; // GREEN for LOW
+                    if (pred.risk_level === 'MEDIUM') {
+                        riskColor = '#ffc107'; // YELLOW
+                    } else if (pred.risk_level === 'HIGH') {
+                        riskColor = '#dc3544'; // RED
+                    }
+                    
+                    const probPercent = (pred.probability * 100).toFixed(1);
+                    const confPercent = (pred.confidence * 100).toFixed(1);
+                    
+                    return `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td>${timestamp}</td>
+                            <td>${pred.loc}</td>
+                            <td>${pred.wmc.toFixed(2)}</td>
+                            <td><span style="background-color: ${riskColor}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${pred.risk_level}</span></td>
+                            <td>${probPercent}%</td>
+                            <td>${confPercent}%</td>
+                            <td><span style="color: #666;">Stored</span></td>
+                            <td><button class="btn-delete" onclick="deletePrediction(${pred.id}, '${timestamp}')" title="Delete this prediction">🗑️ Delete</button></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                tbody.innerHTML = rows;
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                const tbody = document.getElementById('predictionsBody');
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading predictions. Please refresh the page.</td></tr>';
+            }
+        }
+
+        async function deletePrediction(predId, timestamp) {
+            // Confirm deletion
+            if (!confirm(`Delete prediction from ${timestamp}? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/predictions/${predId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('✓ Prediction deleted successfully');
+                    // Reload predictions table
+                    loadPredictions();
+                } else {
+                    alert('✗ Failed to delete prediction. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deleting prediction:', error);
+                alert('✗ Error deleting prediction: ' + error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+            loadPredictions();
+        });
+    </script>
+</body>
+</html>

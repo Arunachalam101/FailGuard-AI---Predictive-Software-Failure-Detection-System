@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FailGuard AI - Prediction Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🛡️ FailGuard AI</h1>
+                <p class="subtitle">Prediction Result</p>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">← Back to Analyzer</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section id="resultContainer" class="result-section">
+                <div id="resultContent"></div>
+            </section>
+
+            <section class="recommendations">
+                <h3>📋 Recommendations</h3>
+                <div id="recommendationsContent"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 FailGuard AI - Predictive Software Failure Detection</p>
+        </footer>
+    </div>
+
+    <script>
+        function displayResult(result) {
+            if (!result.success) {
+                document.getElementById('resultContent').innerHTML = `
+                    <div class="error-box">
+                        <p><strong>Error:</strong> ${result.error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const riskColor = result.risk_color;
+            const riskEmoji = result.risk_level === 'HIGH' ? '⚠️' : 
+                            result.risk_level === 'MEDIUM' ? '⚡' : '✅';
+
+            const html = `
+                <div class="result-card" style="background-color: ${riskColor}20; border-left: 6px solid ${riskColor};">
+                    <div class="result-header">
+                        <span class="risk-emoji">${riskEmoji}</span>
+                        <div class="result-title">
+                            <h2>Risk Level: ${result.risk_level}</h2>
+                            <p class="result-subtitle">Module Failure Prediction</p>
+                        </div>
+                    </div>
+
+                    <div class="result-metrics">
+                        <div class="metric-item">
+                            <div class="metric-label">Failure Probability</div>
+                            <div class="metric-widget">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${result.probability}%; background-color: ${riskColor};"></div>
+                                </div>
+                                <div class="metric-value">${result.probability}%</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-label">Model Confidence</div>
+                            <div class="metric-value">${result.confidence}%</div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-label">Prediction Status</div>
+                            <div class="metric-value">${result.prediction}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-summary">
+                    <h3>Input Module Metrics</h3>
+                    <div class="metrics-table">
+                        <div class="metric-row">
+                            <span class="metric-key">Lines of Code (LOC):</span>
+                            <span class="metric-val">${result.input_features.loc}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Weighted Methods per Class (WMC):</span>
+                            <span class="metric-val">${result.input_features.wmc}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Response for a Class (RFC):</span>
+                            <span class="metric-val">${result.input_features.rfc}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Coupling Between Objects (CBO):</span>
+                            <span class="metric-val">${result.input_features.cbo}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Lack of Cohesion (LCOM):</span>
+                            <span class="metric-val">${result.input_features.lcom}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Code Churn:</span>
+                            <span class="metric-val">${result.input_features.code_churn}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Number of Developers:</span>
+                            <span class="metric-val">${result.input_features.num_developers}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-key">Past Defects:</span>
+                            <span class="metric-val">${result.input_features.past_defects}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultContent').innerHTML = html;
+            displayRecommendations(result.risk_level, result.probability);
+        }
+
+        function displayRecommendations(riskLevel, probability) {
+            let recommendations = [];
+
+            if (riskLevel === 'HIGH') {
+                recommendations = [
+                    '🔴 Perform thorough code review before deployment',
+                    '🔴 Increase test coverage for this module',
+                    '🔴 Consider refactoring to reduce complexity',
+                    '🔴 Schedule security audit and penetration testing',
+                    '🔴 Plan additional debugging and QA time'
+                ];
+            } else if (riskLevel === 'MEDIUM') {
+                recommendations = [
+                    '🟡 Standard code review recommended',
+                    '🟡 Ensure adequate test coverage is present',
+                    '🟡 Monitor during initial deployment phase',
+                    '🟡 Consider minor refactoring if feasible',
+                    '🟡 Implement runtime monitoring and logging'
+                ];
+            } else {
+                recommendations = [
+                    '🟢 Standard QA process sufficient',
+                    '🟢 Proceed with normal code review',
+                    '🟢 Maintain current test coverage levels',
+                    '🟢 Low risk for deployment',
+                    '🟢 Continue monitoring for performance issues'
+                ];
+            }
+
+            const html = recommendations.map(rec => `<div class="recommendation-item">${rec}</div>`).join('');
+            document.getElementById('recommendationsContent').innerHTML = html;
+        }
+
+        // Retrieve and display result from previous prediction
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultData = sessionStorage.getItem('lastPrediction');
+        
+        if (resultData) {
+            displayResult(JSON.parse(resultData));
+            sessionStorage.removeItem('lastPrediction');
+        } else {
+            document.getElementById('resultContent').innerHTML = `
+                <div class="info-box">
+                    <p>No prediction data available. Please go back to the analyzer and submit a prediction.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

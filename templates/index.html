@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FailGuard AI - Software Failure Risk Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🛡️ FailGuard AI</h1>
+                <p class="subtitle">Predictive Software Failure Detection System</p>
+            </div>
+        </header>
+
+        <main>
+            <section class="intro">
+                <h2>Analyze Software Module Risk</h2>
+                <p>Enter your software module metrics to get an AI-powered risk prediction before deployment.</p>
+            </section>
+
+            <section class="form-section">
+                <form id="predictionForm" class="prediction-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="loc">
+                                <span class="label-text">Lines of Code (LOC)</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Total number of lines in the module</span>
+                                </span>
+                            </label>
+                            <input type="number" id="loc" name="loc" min="0" step="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="wmc">
+                                <span class="label-text">Weighted Methods per Class (WMC)</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Complexity measure of class structure</span>
+                                </span>
+                            </label>
+                            <input type="number" id="wmc" name="wmc" min="0" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rfc">
+                                <span class="label-text">Response for a Class (RFC)</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Number of methods invoked by a class</span>
+                                </span>
+                            </label>
+                            <input type="number" id="rfc" name="rfc" min="0" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cbo">
+                                <span class="label-text">Coupling Between Objects (CBO)</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Number of classes coupled to this class</span>
+                                </span>
+                            </label>
+                            <input type="number" id="cbo" name="cbo" min="0" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lcom">
+                                <span class="label-text">Lack of Cohesion (LCOM)</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Measure of method-attribute relationships (0-1)</span>
+                                </span>
+                            </label>
+                            <input type="number" id="lcom" name="lcom" min="0" max="1" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="code_churn">
+                                <span class="label-text">Code Churn</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Number of code changes in recent period</span>
+                                </span>
+                            </label>
+                            <input type="number" id="code_churn" name="code_churn" min="0" step="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="num_developers">
+                                <span class="label-text">Number of Developers</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Count of developers who modified the module</span>
+                                </span>
+                            </label>
+                            <input type="number" id="num_developers" name="num_developers" min="1" step="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="past_defects">
+                                <span class="label-text">Past Defects</span>
+                                <span class="tooltip">?
+                                    <span class="tooltip-text">Historical defect count in this module</span>
+                                </span>
+                            </label>
+                            <input type="number" id="past_defects" name="past_defects" min="0" step="1" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <span class="btn-text">🔍 Analyze Module Risk</span>
+                    </button>
+                </form>
+            </section>
+
+            <section id="resultSection" class="result-section" style="display: none;">
+                <div id="resultContent"></div>
+            </section>
+
+            <section class="info-section">
+                <h3>How it Works</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>1. Input Metrics</h4>
+                        <p>Provide your software module metrics such as complexity, coupling, and historical data.</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>2. AI Analysis</h4>
+                        <p>Our machine learning model analyzes the metrics to predict failure risk.</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>3. Risk Assessment</h4>
+                        <p>Get instant feedback on risk level and probability of defects.</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>4. Action Items</h4>
+                        <p>Prioritize code reviews and testing based on predicted risk.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 FailGuard AI - Predictive Software Failure Detection</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
