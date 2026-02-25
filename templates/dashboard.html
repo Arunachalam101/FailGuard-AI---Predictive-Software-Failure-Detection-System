@@ -269,96 +269,107 @@
             // Load metrics from API
             loadMetrics();
             
-            // Feature Importance Data
-            const featureData = [{
-                x: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Code Churn', 'Developers', 'Past Defects'],
-                y: [0.25, 0.22, 0.18, 0.15, 0.08, 0.07, 0.03, 0.02],
-                type: 'bar',
-                marker: {color: '#3498db'}
-            }];
+            // Wait for Plotly to be available
+            if (typeof Plotly === 'undefined') {
+                console.error('Plotly library not loaded');
+                return;
+            }
             
-            Plotly.newPlot('featureChart', featureData, {
-                title: '',
-                xaxis: {title: 'Software Metrics'},
-                yaxis: {title: 'Importance Score'},
-                font: {size: 12},
-                margin: {l: 60, r: 40, t: 40, b: 80}
-            });
-
-            // Risk Distribution Pie Chart
-            const riskData = [{
-                labels: ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'],
-                values: [45, 35, 20],
-                type: 'pie',
-                marker: {
-                    colors: ['#28a745', '#ffc107', '#dc3545']
-                },
-                textposition: 'inside',
-                textinfo: 'label+percent'
-            }];
-            
-            Plotly.newPlot('riskChart', riskData, {
-                title: '',
-                font: {size: 12}
-            });
-
-            // Confusion Matrix Heatmap
-            const confusionData = [{
-                z: [[924, 0], [76, 1]],
-                x: ['Predicted Safe', 'Predicted Defective'],
-                y: ['Actual Safe', 'Actual Defective'],
-                type: 'heatmap',
-                colorscale: 'Blues',
-                showscale: true,
-                text: [[924, 0], [76, 1]],
-                texttemplate: '%{text}',
-                textfont: {size: 14}
-            }];
-            
-            Plotly.newPlot('confusionMatrix', confusionData, {
-                title: '',
-                xaxis: {side: 'bottom'},
-                margin: {l: 150, r: 40, t: 40, b: 100}
-            });
-
-            // Model Comparison Chart
-            const models = ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'];
-            const accuracy = [0.924, 0.925, 0.918, 0.924];
-            const f1Score = [0.0, 0.026, 0.068, 0.0];
-            
-            const trace1 = {
-                x: models,
-                y: accuracy,
-                name: 'Accuracy',
-                type: 'bar',
-                marker: {color: '#3498db'}
-            };
-            
-            const trace2 = {
-                x: models,
-                y: f1Score,
-                name: 'F1-Score',
-                type: 'bar',
-                marker: {color: '#e74c3c'}
-            };
-            
-            const layout = {
-                title: '',
-                xaxis: {title: ''},
-                yaxis: {title: 'Score'},
-                barmode: 'group',
-                font: {size: 12},
-                margin: {l: 60, r: 40, t: 40, b: 100}
-            };
-            
-            Plotly.newPlot('modelComparison', [trace1, trace2], layout);
-
-            // Update metrics
-            document.getElementById('accuracy').textContent = '92.4%';
-            document.getElementById('precision').textContent = '25%';
-            document.getElementById('recall').textContent = '3.9%';
-            document.getElementById('f1score').textContent = '6.8%';
-            document.getElementById('rocauc').textContent = '55%';
+            try {
+                // Feature Importance Chart
+                const featureData = [{
+                    x: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Code Churn', 'Developers', 'Past Defects'],
+                    y: [0.25, 0.22, 0.18, 0.15, 0.08, 0.07, 0.03, 0.02],
+                    type: 'bar',
+                    marker: {color: '#3498db'}
+                }];
+                
+                const featureLayout = {
+                    title: '',
+                    xaxis: {title: 'Software Metrics'},
+                    yaxis: {title: 'Importance Score'},
+                    font: {size: 12},
+                    margin: {l: 60, r: 40, t: 40, b: 80}
+                };
+                
+                Plotly.newPlot('featureChart', featureData, featureLayout, {responsive: true});
+                
+                // Risk Distribution Pie Chart
+                const riskData = [{
+                    labels: ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'],
+                    values: [45, 35, 20],
+                    type: 'pie',
+                    marker: {
+                        colors: ['#28a745', '#ffc107', '#dc3545']
+                    },
+                    textposition: 'inside',
+                    textinfo: 'label+percent'
+                }];
+                
+                const riskLayout = {
+                    title: '',
+                    font: {size: 12}
+                };
+                
+                Plotly.newPlot('riskChart', riskData, riskLayout, {responsive: true});
+                
+                // Confusion Matrix Heatmap
+                const confusionData = [{
+                    z: [[924, 0], [76, 1]],
+                    x: ['Predicted Safe', 'Predicted Defective'],
+                    y: ['Actual Safe', 'Actual Defective'],
+                    type: 'heatmap',
+                    colorscale: 'Blues',
+                    showscale: true,
+                    text: [[924, 0], [76, 1]],
+                    texttemplate: '%{text}',
+                    textfont: {size: 14}
+                }];
+                
+                const confusionLayout = {
+                    title: '',
+                    xaxis: {side: 'bottom'},
+                    margin: {l: 150, r: 40, t: 40, b: 100}
+                };
+                
+                Plotly.newPlot('confusionMatrix', confusionData, confusionLayout, {responsive: true});
+                
+                // Model Comparison Chart
+                const models = ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'];
+                const accuracy = [0.924, 0.925, 0.918, 0.924];
+                const f1Score = [0.0, 0.026, 0.068, 0.0];
+                
+                const trace1 = {
+                    x: models,
+                    y: accuracy,
+                    name: 'Accuracy',
+                    type: 'bar',
+                    marker: {color: '#3498db'}
+                };
+                
+                const trace2 = {
+                    x: models,
+                    y: f1Score,
+                    name: 'F1-Score',
+                    type: 'bar',
+                    marker: {color: '#e74c3c'}
+                };
+                
+                const modelLayout = {
+                    title: '',
+                    xaxis: {title: ''},
+                    yaxis: {title: 'Score'},
+                    barmode: 'group',
+                    font: {size: 12},
+                    margin: {l: 60, r: 40, t: 40, b: 100}
+                };
+                
+                Plotly.newPlot('modelComparison', [trace1, trace2], modelLayout, {responsive: true});
+                
+                console.log('All charts rendered successfully');
+            } catch (error) {
+                console.error('Error rendering charts:', error);
+            }
         }
 
         function quickTest() {
