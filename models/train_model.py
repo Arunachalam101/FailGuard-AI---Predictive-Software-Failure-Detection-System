@@ -17,7 +17,7 @@ from config import MODEL_PATH, MODELS_DIR
 
 def train_models(X_train, X_test, y_train, y_test):
     """
-    Train multiple ML models.
+    Train multiple ML models with class weight balancing for imbalanced data.
     
     Args:
         X_train, X_test: Training and test features
@@ -26,11 +26,19 @@ def train_models(X_train, X_test, y_train, y_test):
     Returns:
         Dictionary of trained models and their metrics
     """
+    # Calculate class weights to handle imbalance
+    # More weight for minority class (defective)
+    from sklearn.utils.class_weight import compute_class_weight
+    class_weights = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
+    class_weight_dict = {i: w for i, w in enumerate(class_weights)}
+    
+    print(f"\nClass weights (to balance imbalance): {class_weight_dict}")
+    
     models = {
-        'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
-        'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1),
-        'SVM': SVC(kernel='rbf', probability=True, random_state=42),
-        'XGBoost': XGBClassifier(n_estimators=100, random_state=42, verbosity=0)
+        'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced'),
+        'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced'),
+        'SVM': SVC(kernel='rbf', probability=True, random_state=42, class_weight='balanced'),
+        'XGBoost': XGBClassifier(n_estimators=100, random_state=42, verbosity=0, scale_pos_weight=class_weight_dict[1]/class_weight_dict[0])
     }
     
     trained_models = {}
