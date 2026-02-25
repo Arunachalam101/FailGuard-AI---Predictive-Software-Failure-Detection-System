@@ -231,17 +231,25 @@
         </footer>
     </div>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Wait for Plotly to load
-        function waitForPlotly(callback, attempts = 0) {
+        // Simple initialization that doesn't block on Plotly
+        async function initializeDashboard() {
+            console.log('Initializing dashboard...');
+            
+            // Load metrics immediately
+            await loadMetrics();
+            
+            // Render charts if Plotly is available
             if (typeof Plotly !== 'undefined') {
-                console.log('✓ Plotly library loaded successfully');
-                callback();
-            } else if (attempts < 50) {
-                setTimeout(() => waitForPlotly(callback, attempts + 1), 100);
+                renderCharts();
             } else {
-                console.error('✗ Plotly library failed to load');
+                console.warn('Plotly not available, retrying in 1 second...');
+                setTimeout(renderCharts, 1000);
             }
+            
+            // Load predictions
+            await loadPredictions();
         }
 
         async function loadMetrics() {
@@ -249,20 +257,19 @@
                 const response = await fetch('/api/metrics');
                 const data = await response.json();
                 
-                if (data.success) {
-                    const metrics = data.metrics;
-                    document.getElementById('accuracy').textContent = (metrics.accuracy * 100).toFixed(2) + '%';
-                    document.getElementById('precision').textContent = (metrics.precision * 100).toFixed(2) + '%';
-                    document.getElementById('recall').textContent = (metrics.recall * 100).toFixed(2) + '%';
-                    document.getElementById('f1score').textContent = metrics.f1_score.toFixed(4);
-                    document.getElementById('rocauc').textContent = metrics.roc_auc.toFixed(4);
-                    console.log('✓ Metrics loaded successfully');
+                if (data.success && data.metrics) {
+                    const m = data.metrics;
+                    document.getElementById('accuracy').textContent = (m.accuracy * 100).toFixed(2) + '%';
+                    document.getElementById('precision').textContent = (m.precision * 100).toFixed(2) + '%';
+                    document.getElementById('recall').textContent = (m.recall * 100).toFixed(2) + '%';
+                    document.getElementById('f1score').textContent = m.f1_score.toFixed(4);
+                    document.getElementById('rocauc').textContent = m.roc_auc.toFixed(4);
+                    console.log('✓ Metrics loaded');
                 } else {
-                    console.error('Error loading metrics:', data.error);
-                    setDefaultMetrics();
+                    throw new Error('Invalid metrics response');
                 }
             } catch (error) {
-                console.error('Error fetching metrics:', error);
+                console.error('Error loading metrics:', error);
                 setDefaultMetrics();
             }
         }
@@ -275,118 +282,143 @@
             document.getElementById('rocauc').textContent = '0.9210';
         }
 
-        function initializeDashboard() {
-            console.log('Initializing dashboard...');
-            
-            // Load metrics from API
-            loadMetrics();
-            
-            // Check if Plotly is available
+        function renderCharts() {
             if (typeof Plotly === 'undefined') {
-                console.error('Plotly is not available');
+                console.error('Plotly still not available');
                 return;
             }
             
             try {
-                console.log('Creating charts...');
+                console.log('Fetching dynamic chart data...');
                 
-                // Feature Importance Chart
-                const featureData = [{
+                // Fetch real data from API
+                fetch('/api/chart-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Chart data received:', data);
+                        
+                        if (!data.success) {
+                            console.warn('Using fallback chart data:', data);
+                        }
+                        
+                        // 1. Feature Importance
+                        const featureImp = data.feature_importance || {
+                            features: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Churn', 'Devs', 'Defects'],
+                            values: [0.25, 0.22, 0.18, 0.15, 0.08, 0.07, 0.03, 0.02]
+                        };
+                        
+                        Plotly.newPlot('featureChart', [{
+                            x: featureImp.features,
+                            y: featureImp.values,
+                            type: 'bar',
+                            marker: {color: '#3498db'}
+                        }], {
+                            xaxis: {title: 'Software Metrics'},
+                            yaxis: {title: 'Importance Score'},
+                            margin: {l: 60, r: 40, t: 40, b: 80}
+                        }, {responsive: true});
+                        console.log('✓ Feature Importance chart rendered');
+                        
+                        // 2. Risk Distribution
+                        const riskDist = data.risk_distribution || {
+                            labels: ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'],
+                            values: [45, 35, 20]
+                        };
+                        
+                        Plotly.newPlot('riskChart', [{
+                            labels: riskDist.labels,
+                            values: riskDist.values,
+                            type: 'pie',
+                            marker: {colors: ['#28a745', '#ffc107', '#dc3545']}
+                        }], {}, {responsive: true});
+                        console.log('✓ Risk Distribution chart rendered');
+                        
+                        // 3. Confusion Matrix
+                        const confMatrix = data.confusion_matrix || {
+                            data: [[924, 0], [76, 1]]
+                        };
+                        
+                        Plotly.newPlot('confusionMatrix', [{
+                            z: confMatrix.data,
+                            x: ['Predicted Safe', 'Predicted Defective'],
+                            y: ['Actual Safe', 'Actual Defective'],
+                            type: 'heatmap',
+                            colorscale: 'Blues',
+                            text: confMatrix.data,
+                            texttemplate: '%{text}',
+                            textfont: {size: 14}
+                        }], {
+                            margin: {l: 150, r: 40, t: 40, b: 100}
+                        }, {responsive: true});
+                        console.log('✓ Confusion Matrix chart rendered');
+                        
+                        // 4. Model Comparison
+                        const modelComp = data.model_comparison || {
+                            models: ['LR', 'RF', 'XGB', 'SVM'],
+                            accuracies: [92.4, 92.5, 91.8, 92.4]
+                        };
+                        
+                        Plotly.newPlot('modelComparison', [
+                            {
+                                x: modelComp.models,
+                                y: modelComp.accuracies,
+                                name: 'Accuracy (%)',
+                                type: 'bar',
+                                marker: {color: '#3498db'}
+                            }
+                        ], {
+                            yaxis: {title: 'Accuracy (%)'},
+                            margin: {l: 60, r: 40, t: 40, b: 100}
+                        }, {responsive: true});
+                        console.log('✓ Model Comparison chart rendered');
+                        
+                        console.log('✓ All dynamic charts rendered successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching chart data:', error);
+                        renderChartsWithFallback();
+                    });
+            } catch (error) {
+                console.error('Error rendering charts:', error);
+                renderChartsWithFallback();
+            }
+        }
+
+        function renderChartsWithFallback() {
+            console.log('Using fallback static charts...');
+            try {
+                Plotly.newPlot('featureChart', [{
                     x: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Code Churn', 'Developers', 'Past Defects'],
                     y: [0.25, 0.22, 0.18, 0.15, 0.08, 0.07, 0.03, 0.02],
                     type: 'bar',
                     marker: {color: '#3498db'}
-                }];
+                }], {}, {responsive: true});
                 
-                const featureLayout = {
-                    title: '',
-                    xaxis: {title: 'Software Metrics'},
-                    yaxis: {title: 'Importance Score'},
-                    font: {size: 12},
-                    margin: {l: 60, r: 40, t: 40, b: 80}
-                };
-                
-                Plotly.newPlot('featureChart', featureData, featureLayout, {responsive: true});
-                console.log('✓ Feature Importance chart rendered');
-                
-                // Risk Distribution Pie Chart
-                const riskData = [{
+                Plotly.newPlot('riskChart', [{
                     labels: ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'],
                     values: [45, 35, 20],
                     type: 'pie',
-                    marker: {
-                        colors: ['#28a745', '#ffc107', '#dc3545']
-                    },
-                    textposition: 'inside',
-                    textinfo: 'label+percent'
-                }];
+                    marker: {colors: ['#28a745', '#ffc107', '#dc3545']}
+                }], {}, {responsive: true});
                 
-                const riskLayout = {
-                    title: '',
-                    font: {size: 12}
-                };
-                
-                Plotly.newPlot('riskChart', riskData, riskLayout, {responsive: true});
-                console.log('✓ Risk Distribution chart rendered');
-                
-                // Confusion Matrix Heatmap
-                const confusionData = [{
+                Plotly.newPlot('confusionMatrix', [{
                     z: [[924, 0], [76, 1]],
                     x: ['Predicted Safe', 'Predicted Defective'],
                     y: ['Actual Safe', 'Actual Defective'],
                     type: 'heatmap',
-                    colorscale: 'Blues',
-                    showscale: true,
-                    text: [[924, 0], [76, 1]],
-                    texttemplate: '%{text}',
-                    textfont: {size: 14}
-                }];
+                    colorscale: 'Blues'
+                }], {}, {responsive: true});
                 
-                const confusionLayout = {
-                    title: '',
-                    xaxis: {side: 'bottom'},
-                    margin: {l: 150, r: 40, t: 40, b: 100}
-                };
-                
-                Plotly.newPlot('confusionMatrix', confusionData, confusionLayout, {responsive: true});
-                console.log('✓ Confusion Matrix chart rendered');
-                
-                // Model Comparison Chart
-                const models = ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'];
-                const accuracy = [0.924, 0.925, 0.918, 0.924];
-                const f1Score = [0.0, 0.026, 0.068, 0.0];
-                
-                const trace1 = {
-                    x: models,
-                    y: accuracy,
-                    name: 'Accuracy',
+                Plotly.newPlot('modelComparison', [{
+                    x: ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'],
+                    y: [0.924, 0.925, 0.918, 0.924],
                     type: 'bar',
                     marker: {color: '#3498db'}
-                };
+                }], {}, {responsive: true});
                 
-                const trace2 = {
-                    x: models,
-                    y: f1Score,
-                    name: 'F1-Score',
-                    type: 'bar',
-                    marker: {color: '#e74c3c'}
-                };
-                
-                const modelLayout = {
-                    title: '',
-                    xaxis: {title: ''},
-                    yaxis: {title: 'Score'},
-                    barmode: 'group',
-                    font: {size: 12},
-                    margin: {l: 60, r: 40, t: 40, b: 100}
-                };
-                
-                Plotly.newPlot('modelComparison', [trace1, trace2], modelLayout, {responsive: true});
-                console.log('✓ Model Comparison chart rendered');
-                
-                console.log('✓ Dashboard initialized successfully');
+                console.log('✓ Fallback charts rendered');
             } catch (error) {
-                console.error('Error initializing dashboard:', error);
+                console.error('Error rendering fallback charts:', error);
             }
         }
 
@@ -517,12 +549,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, waiting for Plotly...');
-            waitForPlotly(() => {
-                console.log('Plotly ready, initializing dashboard...');
-                initializeDashboard();
-                loadPredictions();
-            });
+            console.log('Page loaded');
+            initializeDashboard();
         });
     </script>
 </body>
