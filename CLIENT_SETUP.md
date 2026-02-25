@@ -1,6 +1,24 @@
 # 🚀 FailGuard AI - Setup & Running Instructions for Clients
 
-## Quick Overview
+## ⚠️ If You Get Error About "numpy._core"
+
+**Quick Fix (2 minutes):**
+
+```powershell
+pip install --upgrade -r requirements.txt
+```
+
+This updates XGBoost to a compatible version. Then:
+
+```powershell
+python app.py
+```
+
+That's it! The error happens with newer XGBoost versions. The requirements.txt file now has the correct compatible versions.
+
+---
+
+## 🚀 Quick Overview
 FailGuard AI is a machine learning system that analyzes software code metrics and predicts the risk of failure in software modules before deployment.
 
 **Time to run**: 3-5 minutes  
@@ -171,16 +189,20 @@ The model files should already be in the `models/` folder:
 
 If missing, the model was pre-trained and included in the repository.
 
-### Problem: "ModuleNotFoundError: No module named 'numpy._core'"
+### Problem: "ModuleNotFoundError: No module named 'numpy._core'" OR "XGBoost model compatibility error"
 **Solution**: 
-This happens with newer Python/numpy versions. A retraining script is provided:
+This happens with newer XGBoost versions (2.0+). Simply update your packages:
+
 ```powershell
-python retrain_model.py
+pip install --upgrade -r requirements.txt
 ```
 
-The script will retrain the model on your machine (takes 1-2 minutes) and make it compatible with your environment. Then try running the app again.
+This installs XGBoost 1.7.6 which is compatible with the pre-trained model. Takes about 1 minute.
 
-For detailed info, see: `FIX_NUMPY_ERROR.md`
+Then start the app:
+```powershell
+python app.py
+```
 
 ---
 
