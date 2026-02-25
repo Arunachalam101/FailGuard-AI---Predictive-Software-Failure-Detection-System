@@ -40,7 +40,7 @@ def retrain_model():
     try:
         # Step 1: Load and prepare data
         print("Step 1: Loading and preparing data...")
-        X_train, X_test, y_train, y_test, feature_names, scaler = prepare_data()
+        X_train, X_test, y_train, y_test, feature_names = prepare_data()
         print(f"  ✓ Loaded {len(X_train)} training samples")
         print(f"  ✓ Loaded {len(X_test)} test samples")
         print(f"  ✓ Features: {feature_names}\n")
@@ -82,7 +82,7 @@ def retrain_model():
         print(f"\n  ✓ Best model: {best_name} ({best_score:.1%} accuracy)\n")
         
         # Step 3: Save the best model
-        print("Step 3: Saving model and scaler...")
+        print("Step 3: Saving model...")
         
         # Create models directory if it doesn't exist
         MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -90,10 +90,7 @@ def retrain_model():
         # Save the best model
         joblib.dump(best_model, MODEL_PATH)
         print(f"  ✓ Model saved to: {MODEL_PATH}")
-        
-        # Save the scaler
-        joblib.dump(scaler, SCALER_PATH)
-        print(f"  ✓ Scaler saved to: {SCALER_PATH}\n")
+        print(f"  ✓ Scaler already saved during data preparation\n")
         
         # Step 4: Test the model
         print("Step 4: Testing the model...")
