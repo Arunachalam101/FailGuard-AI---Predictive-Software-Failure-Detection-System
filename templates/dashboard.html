@@ -6,7 +6,6 @@
     <title>FailGuard AI - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
     <div class="container">
@@ -233,6 +232,18 @@
     </div>
 
     <script>
+        // Wait for Plotly to load
+        function waitForPlotly(callback, attempts = 0) {
+            if (typeof Plotly !== 'undefined') {
+                console.log('✓ Plotly library loaded successfully');
+                callback();
+            } else if (attempts < 50) {
+                setTimeout(() => waitForPlotly(callback, attempts + 1), 100);
+            } else {
+                console.error('✗ Plotly library failed to load');
+            }
+        }
+
         async function loadMetrics() {
             try {
                 const response = await fetch('/api/metrics');
@@ -245,37 +256,40 @@
                     document.getElementById('recall').textContent = (metrics.recall * 100).toFixed(2) + '%';
                     document.getElementById('f1score').textContent = metrics.f1_score.toFixed(4);
                     document.getElementById('rocauc').textContent = metrics.roc_auc.toFixed(4);
+                    console.log('✓ Metrics loaded successfully');
                 } else {
                     console.error('Error loading metrics:', data.error);
-                    // Use default values if error
-                    document.getElementById('accuracy').textContent = '92.5%';
-                    document.getElementById('precision').textContent = '92.0%';
-                    document.getElementById('recall').textContent = '92.4%';
-                    document.getElementById('f1score').textContent = '0.9220';
-                    document.getElementById('rocauc').textContent = '0.9210';
+                    setDefaultMetrics();
                 }
             } catch (error) {
                 console.error('Error fetching metrics:', error);
-                // Use default values if error
-                document.getElementById('accuracy').textContent = '92.5%';
-                document.getElementById('precision').textContent = '92.0%';
-                document.getElementById('recall').textContent = '92.4%';
-                document.getElementById('f1score').textContent = '0.9220';
-                document.getElementById('rocauc').textContent = '0.9210';
+                setDefaultMetrics();
             }
         }
 
+        function setDefaultMetrics() {
+            document.getElementById('accuracy').textContent = '92.5%';
+            document.getElementById('precision').textContent = '92.0%';
+            document.getElementById('recall').textContent = '92.4%';
+            document.getElementById('f1score').textContent = '0.9220';
+            document.getElementById('rocauc').textContent = '0.9210';
+        }
+
         function initializeDashboard() {
+            console.log('Initializing dashboard...');
+            
             // Load metrics from API
             loadMetrics();
             
-            // Wait for Plotly to be available
+            // Check if Plotly is available
             if (typeof Plotly === 'undefined') {
-                console.error('Plotly library not loaded');
+                console.error('Plotly is not available');
                 return;
             }
             
             try {
+                console.log('Creating charts...');
+                
                 // Feature Importance Chart
                 const featureData = [{
                     x: ['LOC', 'WMC', 'RFC', 'CBO', 'LCOM', 'Code Churn', 'Developers', 'Past Defects'],
@@ -293,6 +307,7 @@
                 };
                 
                 Plotly.newPlot('featureChart', featureData, featureLayout, {responsive: true});
+                console.log('✓ Feature Importance chart rendered');
                 
                 // Risk Distribution Pie Chart
                 const riskData = [{
@@ -312,6 +327,7 @@
                 };
                 
                 Plotly.newPlot('riskChart', riskData, riskLayout, {responsive: true});
+                console.log('✓ Risk Distribution chart rendered');
                 
                 // Confusion Matrix Heatmap
                 const confusionData = [{
@@ -333,6 +349,7 @@
                 };
                 
                 Plotly.newPlot('confusionMatrix', confusionData, confusionLayout, {responsive: true});
+                console.log('✓ Confusion Matrix chart rendered');
                 
                 // Model Comparison Chart
                 const models = ['Logistic Regression', 'Random Forest', 'XGBoost', 'SVM'];
@@ -365,10 +382,11 @@
                 };
                 
                 Plotly.newPlot('modelComparison', [trace1, trace2], modelLayout, {responsive: true});
+                console.log('✓ Model Comparison chart rendered');
                 
-                console.log('All charts rendered successfully');
+                console.log('✓ Dashboard initialized successfully');
             } catch (error) {
-                console.error('Error rendering charts:', error);
+                console.error('Error initializing dashboard:', error);
             }
         }
 
@@ -499,8 +517,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            initializeDashboard();
-            loadPredictions();
+            console.log('DOM loaded, waiting for Plotly...');
+            waitForPlotly(() => {
+                console.log('Plotly ready, initializing dashboard...');
+                initializeDashboard();
+                loadPredictions();
+            });
         });
     </script>
 </body>
