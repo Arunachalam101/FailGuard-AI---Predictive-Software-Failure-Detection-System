@@ -171,11 +171,16 @@ The model files should already be in the `models/` folder:
 
 If missing, the model was pre-trained and included in the repository.
 
-### Problem: "Database error"
+### Problem: "ModuleNotFoundError: No module named 'numpy._core'"
 **Solution**: 
-The database (`database/predictions.db`) is created automatically on first run. If there's an error:
-1. Delete `database/predictions.db` (if it exists)
-2. Restart the application
+This happens with newer Python/numpy versions. A retraining script is provided:
+```powershell
+python retrain_model.py
+```
+
+The script will retrain the model on your machine (takes 1-2 minutes) and make it compatible with your environment. Then try running the app again.
+
+For detailed info, see: `FIX_NUMPY_ERROR.md`
 
 ---
 

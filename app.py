@@ -15,7 +15,24 @@ app = Flask(__name__)
 app.config['DEBUG'] = DEBUG
 
 # Load model on startup
-predictor = load_model()
+try:
+    predictor = load_model()
+except ModuleNotFoundError as e:
+    if 'numpy' in str(e) or '_core' in str(e):
+        print("\n" + "="*70)
+        print("❌ MODEL COMPATIBILITY ERROR")
+        print("="*70)
+        print("\nThe model is not compatible with your Python/numpy version.")
+        print("\n✅ SOLUTION: Run the retraining script (takes 1-2 minutes)")
+        print("\n   Command: python retrain_model.py")
+        print("\nThis will create new model files compatible with your environment.")
+        print("See FIX_NUMPY_ERROR.md for more details.")
+        print("="*70 + "\n")
+    raise
+except Exception as e:
+    print(f"\n❌ Error loading model: {e}")
+    print("Make sure models/failguard_model.joblib and models/scaler.joblib exist")
+    raise
 
 @app.route('/')
 def index():
